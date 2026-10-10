@@ -42,7 +42,38 @@ app.post('/submit-contract', async (req, res) => {
         `);
     }
 });
+// ==========================================
+// ANDY'S COMP ENGINE - AUTOMATED CMA
+// ==========================================
+app.post('/comps', (req, res) => {
+    const targetAddress = req.body.address || "No address provided";
+    const targetHouseSqft = req.body.sqft || 1500; 
 
+    // Our fake sold homes
+    const mockSoldHomes = [
+        { address: "123 Oak St", price: 350000, sqft: 1500, beds: 3, baths: 2 },
+        { address: "125 Oak St", price: 340000, sqft: 1450, beds: 3, baths: 2 },
+        { address: "129 Oak St", price: 360000, sqft: 1550, beds: 3, baths: 2 }
+    ];
+
+    // The Math: Figure out the average price per square foot
+    let totalPPSQFT = 0;
+    mockSoldHomes.forEach(home => {
+        totalPPSQFT += (home.price / home.sqft); 
+    });
+    const avgPricePerSqft = totalPPSQFT / 3;
+    
+    // The Math: Multiply the average by Andy's listing size
+    const estimatedValue = avgPricePerSqft * targetHouseSqft;
+
+    // Send the final numbers back
+    res.json({
+        message: "Success!",
+        targetAddress: targetAddress,
+        estimatedHomeValue: Math.round(estimatedValue),
+        foundComps: mockSoldHomes
+    });
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Contract Concierge is active: http://localhost:${PORT}`);
