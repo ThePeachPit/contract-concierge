@@ -62,20 +62,26 @@ app.post('/comps', async (req, res) => {
 
         const liveData = await response.json();
 
-        const estimatedValue = liveData.price || 0;
-        const foundComps = liveData.comparables || [];
+        const estimatedValue = liveData.price;
 
-        const formattedValuation = new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            maximumFractionDigits: 0
-        }).format(estimatedValue);
+        let finalOutput;
+        // If we get a price, format it as USD
+        if (estimatedValue) {
+            finalOutput = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0
+            }).format(estimatedValue);
+        } else {
+            // If RentCast fails, print their exact error message instead of $0
+            finalOutput = "API Error: " + JSON.stringify(liveData);
+        }
 
         res.status(200).json({
             message: "Success!",
             targetAddress: targetAddress,
-            estimatedHomeValue: formattedValuation,
-            foundComps: foundComps
+            estimatedHomeValue: finalOutput,
+            foundComps: liveData.comparables || []
         });
 
     } catch (error) {
