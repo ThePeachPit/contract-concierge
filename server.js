@@ -65,12 +65,17 @@ app.post('/comps', (req, res) => {
     
     // The Math: Multiply the average by Andy's listing size
     const estimatedValue = avgPricePerSqft * targetHouseSqft;
-
+// Format the raw number into a clean USD string
+const formattedValuation = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0
+}).format(estimatedValue);
     // Send the final numbers back
     res.json({
         message: "Success!",
         targetAddress: targetAddress,
-        estimatedHomeValue: Math.round(estimatedValue),
+        estimatedHomeValue: formattedValuation,
         foundComps: mockSoldHomes
     });
 });
