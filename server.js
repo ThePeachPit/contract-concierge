@@ -50,7 +50,7 @@ app.post('/comps', async (req, res) => {
     const targetHouseSqft = req.body.sqft || 1500;
 
     try {
-        const rentcastUrl = `https://api.rentcast.io/v1/avm/value?address=${encodeURIComponent(targetAddress)}&squareFootage=${targetHouseSqft}&compCount=3`;
+        const rentcastUrl = `https://api.rentcast.io/v1/avm/value?address=${encodeURIComponent(targetAddress)}&squareFootage=${targetHouseSqft}&compCount=5`;
         
         const response = await fetch(rentcastUrl, {
             method: 'GET',
