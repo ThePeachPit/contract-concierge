@@ -87,7 +87,7 @@ app.post('/comps', async (req, res) => {
             message: "Success!",
             targetAddress: targetAddress,
             estimatedHomeValue: finalOutput,
-            recentComps: formattedCompsList
+            recent_comps: formattedCompsList
         });
 
     } catch (error) {
