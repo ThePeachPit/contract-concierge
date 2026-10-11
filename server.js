@@ -55,17 +55,16 @@ app.post('/comps', async (req, res) => {
         const response = await fetch(rentcastUrl, {
             method: 'GET',
             headers: {
-                'X-Api-Key': 'c0234ade9fea42869d9d65dfa006e185',
+                'X-Api-Key': process.env.RENTCAST_API_KEY,
                 'accept': 'application/json'
             }
         });
 
         const liveData = await response.json();
-
         const estimatedValue = liveData.price;
+        const rawComps = liveData.comparables || [];
 
         let finalOutput;
-        // If we get a price, format it as USD
         if (estimatedValue) {
             finalOutput = new Intl.NumberFormat('en-US', {
                 style: 'currency',
@@ -73,15 +72,22 @@ app.post('/comps', async (req, res) => {
                 maximumFractionDigits: 0
             }).format(estimatedValue);
         } else {
-            // If RentCast fails, print their exact error message instead of $0
             finalOutput = "API Error: " + JSON.stringify(liveData);
+        }
+
+        let formattedCompsList = "No comps available.";
+        if (rawComps.length > 0) {
+            formattedCompsList = rawComps.slice(0, 3).map((comp, index) => {
+                const compPrice = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(comp.price);
+                return `${index + 1}. ${comp.formattedAddress} - Sold for ${compPrice} (${comp.distance} miles away)`;
+            }).join('\n');
         }
 
         res.status(200).json({
             message: "Success!",
             targetAddress: targetAddress,
             estimatedHomeValue: finalOutput,
-            foundComps: liveData.comparables || []
+            recentComps: formattedCompsList
         });
 
     } catch (error) {
