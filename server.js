@@ -45,39 +45,43 @@ app.post('/submit-contract', async (req, res) => {
 // ==========================================
 // ANDY'S COMP ENGINE - AUTOMATED CMA
 // ==========================================
-app.post('/comps', (req, res) => {
+app.post('/comps', async (req, res) => {
     const targetAddress = req.body.address || "No address provided";
-    const targetHouseSqft = req.body.sqft || 1500; 
+    const targetHouseSqft = req.body.sqft || 1500;
 
-    // Our fake sold homes
-    const mockSoldHomes = [
-        { address: "123 Oak St", price: 350000, sqft: 1500, beds: 3, baths: 2 },
-        { address: "125 Oak St", price: 340000, sqft: 1450, beds: 3, baths: 2 },
-        { address: "129 Oak St", price: 360000, sqft: 1550, beds: 3, baths: 2 }
-    ];
+    try {
+        const rentcastUrl = `https://api.rentcast.io/v1/avm/value?address=${encodeURIComponent(targetAddress)}&squareFootage=${targetHouseSqft}&compCount=3`;
+        
+        const response = await fetch(rentcastUrl, {
+            method: 'GET',
+            headers: {
+                'X-Api-Key': 'c0234ade9fea42869d9d65dfa006e185',
+                'accept': 'application/json'
+            }
+        });
 
-    // The Math: Figure out the average price per square foot
-    let totalPPSQFT = 0;
-    mockSoldHomes.forEach(home => {
-        totalPPSQFT += (home.price / home.sqft); 
-    });
-    const avgPricePerSqft = totalPPSQFT / 3;
-    
-    // The Math: Multiply the average by Andy's listing size
-    const estimatedValue = avgPricePerSqft * targetHouseSqft;
-// Format the raw number into a clean USD string
-const formattedValuation = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0
-}).format(estimatedValue);
-    // Send the final numbers back
-    res.json({
-        message: "Success!",
-        targetAddress: targetAddress,
-        estimatedHomeValue: formattedValuation,
-        foundComps: mockSoldHomes
-    });
+        const liveData = await response.json();
+
+        const estimatedValue = liveData.price || 0;
+        const foundComps = liveData.comparables || [];
+
+        const formattedValuation = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0
+        }).format(estimatedValue);
+
+        res.status(200).json({
+            message: "Success!",
+            targetAddress: targetAddress,
+            estimatedHomeValue: formattedValuation,
+            foundComps: foundComps
+        });
+
+    } catch (error) {
+        console.error("RentCast API Error:", error);
+        res.status(500).json({ message: "Failed to fetch live comps" });
+    }
 });
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
